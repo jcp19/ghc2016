@@ -25,9 +25,9 @@ POOL newPool ( NUM rows )
     return malloc( sizeof( NUM ) * rows );
 }
 
-typedef ( NUM * ) DATACENTER; // must be seen as a matrix that stores the info of the row
+typedef ( SERVER ) DATACENTER; // must be seen as a matrix that stores the info of the row
 
 DATACENTER newDataCenter ( NUM rows, NUM columns )
 {
-    return calloc( sizeof( NUM ) * rows * columns );
+    return calloc( sizeof( struct server ) * rows * columns );
 }
