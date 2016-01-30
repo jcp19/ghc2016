@@ -22,7 +22,7 @@ typedef ( NUM * ) POOL; // Stores the capacity of the pool that comes from each 
 
 POOL newPool ( NUM rows )
 {
-    return malloc( sizeof( NUM ) * rows );
+    return calloc( sizeof( NUM ) * rows );
 }
 
 typedef ( SERVER ) DATACENTER; // must be seen as a matrix that stores the info of the row
