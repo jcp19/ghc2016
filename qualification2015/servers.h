@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 typedef int NUM;
 
 typedef struct server {
@@ -6,7 +8,7 @@ typedef struct server {
 
 SERVER newServer ( NUM size, NUM capacity )
 {
-    SERVER newServ = malloc( sizeof( struct server ) );
+    SERVER newServ = (SERVER) malloc( sizeof( struct server ) );
     newServer -> size = size;
     newServer -> capacity = capacity;
     return newServer;
@@ -18,16 +20,16 @@ typedef struct pool {
 } POOL;
 */
 
-typedef ( NUM * ) POOL; // Stores the capacity of the pool that comes from each row
+typedef NUM * POOL; // Stores the capacity of the pool that comes from each row
 
 POOL newPool ( NUM rows )
 {
-    return calloc( sizeof( NUM ) * rows );
+    return calloc( rows, sizeof( NUM ) );
 }
 
-typedef ( SERVER ) DATACENTER; // must be seen as a matrix that stores the info of the row
+typedef SERVER * DATACENTER; // must be seen as a matrix that stores the info of the row
 
 DATACENTER newDataCenter ( NUM rows, NUM columns )
 {
-    return calloc( sizeof( struct server ) * rows * columns );
+    return calloc( rows * columns, SERVER );
 }
