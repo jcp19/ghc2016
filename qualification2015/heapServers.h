@@ -46,33 +46,27 @@ SERVER extractServer(HEAP h)
 
 void bubbleUp(SERVER *h, int i)
 {
-	while(i && 
-		  (h[P(i)]->capacity/h[P(i)]->size) < (h[i]->capacity/h[i]->size)
-		  {
-			swap(h, i, P(i));
-			i = P(i);
-		  }
+	while(i && h[P(i)]->racio < h[i]->racio)
+	{
+		swap(h, i, P(i));
+		i = P(i);
+	}
 }
 
 void bubbleDown(SERVER *h, int i)
 {
-	int j = 0;
-	float right, left, min, cur;
+	int j = 0, max;
 	while(L(j) < i)
 	{
-		cur = h[j]->capacity/h[j]->size;
-		right = h[R(j)]->capacity/h[R(j)]->size;
-		left = h[L(j)]->capacity/h[L(j)]->size);
+		max = h[j]->racio < h[L(j)]->racio ? L(j) : j;
 		
-		min = cur < left ? L(j) : j;
-		
-		if(R(i) < j)
-			min = h[min]->capacity/h[min]->size < right ? R(j) : min;
+		if(R(j) < i)
+			max = h[max]->racio < h[R(j)]->racio ? R(j) : max;
 
-		if(min != j)
+		if(max != j)
 		{
-			swap(h, j, min);
-			i = min;
+			swap(h, j, max);
+			j = max;
 		}
 		else break;
 	}
