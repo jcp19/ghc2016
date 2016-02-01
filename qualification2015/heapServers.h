@@ -30,6 +30,13 @@ void insertServer(HEAP h, SERVER s)
 	bubbleUp(h->values, h->used-1);
 }
 
+void readServers(HEAP h)
+{
+	int s, c; //size, capacity
+	while(scanf("%d %d", &s, &c))
+		insertServer(h, newServer(l, c));
+}
+
 SERVER extractServer(HEAP h)
 {
 	if(h->used > 0)

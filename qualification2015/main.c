@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "servers.h"
+#include "heapServers.h"
 #define FREE NULL
 
 int main ()
@@ -10,6 +11,7 @@ int main ()
     SERVER OCCUPIED = newServer( 0, 0 );
     POOL pool;
     DATACENTER dc;
+	HEAP heap;
     int npools, nservers, nrows, nslots, noccupied, i, x, y;
 
     scanf( "%d %d %d %d %d", &nrows, &nslots, &noccupied, &npools, &nservers );
@@ -24,7 +26,12 @@ int main ()
        scanf( "%d %d", &x, &y );
        POS(x, y) = OCCUPIED;
     }
-    
+	
+	//reads servers directly into the heap
+	initHeap(heap, nservers);
+	readServers(heap);
+
+
     /* now we can insert the servers on the maxheap and pull from it to the dataCenter */
    /*
     cria tabela();
