@@ -4,7 +4,10 @@ typedef int NUM;
 
 typedef struct server {
     NUM size;
-	NUM capacity;
+    NUM capacity;
+    NUM id;
+    float ratio;
+   
 } * SERVER;
 
 SERVER newServer ( NUM size, NUM capacity )
