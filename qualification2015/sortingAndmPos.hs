@@ -34,4 +34,4 @@ possibleSlots l s@(Serv _ _ size _ _ _) start | nFree >= size         = (nFree,s
                                               | otherwise             = possibleSlots remaining s start'
     where nFree = length (takeWhile (==Vazio) l)
           (occupied, remaining) = span (/= Vazio) (drop nFree l)
-          start' = nFree + (length occupied)
+          start' = start + nFree + (length occupied)
