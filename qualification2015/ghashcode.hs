@@ -21,13 +21,19 @@ insereOcupados x dc = do pos <- getLine
                          newDc <- insereOcupados (x-1) newDc
                          return newDc
 
-
+leServers :: Int -> [String] -> [Server]
+leServers _ [] = []
+leServers x (h:t) = (Serv x (vars!!1) (vars!!0)) : (leServers (x+1) t)
+	               where
+	               	 vars = (map read (words h)) :: [Int]
 
 main = do primeiraLinha <- getLine
           vars <- return ((map (read) (words primeiraLinha)) :: [Int])
           dc <- return (newDataCenter (vars!!0) (vars!!1))
           dc <- insereOcupados (vars!!2) dc
           servers <- getContents
+          servers <- return (leServers 0 (lines servers))
           print servers
+
 
 
