@@ -39,7 +39,7 @@ indexer x = indexerAux x 0
 
 capacity :: [Server] -> Int
 capacity [] = 0
-capacity ((Serv _ _ size _ _ _):t) = size + (capacity t)
+capacity ((Serv _ cap _ _ _ _):t) = cap + (capacity t)
 capacity (x:xs) = capacity xs
 
 linha_menorCap_ondeCabe :: DataCenter -> Server -> Int
@@ -104,9 +104,9 @@ main = do primeiraLinha <- getLine
           pools <- return (createPools (vars!!3) (vars!!0))
           -- a distribui vai dar um tuplo "resposta" com (pools, servers)
           resposta <- return (distribui pools dc 0 0 ((vars!!0) -1) ((vars!!1) -1)) 
-          print (snd resposta)
+          print (snd (resposta))
           --a lista final de servidores vai ter a localização dos servidores nas pools
-          --printResposta (fst(resposta))
+          --  printResposta (fst(resposta))
           -- print capacidade_minima_garantida
 
 
@@ -118,7 +118,7 @@ calculaPool pools row cap = ( addPool pools poolNova row cap , poolNova)
 addPool :: [Pool] -> Int -> Int -> Int -> [Pool]
 addPool pools poolAtualizar row cap = (take poolAtualizar pools ) ++ [novaPool] ++ (drop (poolAtualizar+1) pools )
                                        where 
-                                         novaPool = (take row (pools!!poolAtualizar)) ++ [cap + ((pools!!poolAtualizar)!!row)] ++ (drop row (pools!!poolAtualizar)) 
+                                         novaPool = (take row (pools!!poolAtualizar)) ++ [cap + ((pools!!poolAtualizar)!!row)] ++ (drop (row+1) (pools!!poolAtualizar)) 
 
 
 minIndex :: Ord a => [a] -> Int
