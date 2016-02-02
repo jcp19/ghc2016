@@ -36,23 +36,22 @@ indexer x = indexerAux x 0
               where indexerAux [] _ = []
                     indexerAux (h:t) x = ((h,x):(indexerAux t (x+1)))
 
-capacity :: [Servers] -> Int
+capacity :: [Server] -> Int
 capacity [] = 0
 capacity ((Serv _ _ size _ _ _):t) = size + (capacity t)
 capacity (x:xs) = capacity xs
 
-
 linha_menorCap_ondeCabe :: DataCenter -> Server -> Int
-linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) | length linhas_candidatas /= 0 =  snd (head linhas_candidatas)
-                                                 | otherwise = -1
-                                                    where
-                                                      linhas_candidatas = sort (map (\((x,y) -> (capacity x, y))) (filter (\(x,y) -> maxSlotFree x >= size) (indexer dc)))
+linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) | (length linhas_candidatas) /= 0 =  snd (head linhas_candidatas)
+                                                 | otherwise = (-1)
+                                                       where
+                                                           linhas_candidatas = sort (map (\(x,y) -> (capacity x, y)) (filter (\(x,y) -> maxSlotFree x >= size) (indexer dc)))
 
-maxSlotFree :: [Servers] -> Int
+maxSlotFree :: [Server] -> Int
 maxSlotFree [] = 0
-maxSlotFree k = max( (length (takeWhile (\x -> x == Vazio)) k), (maxSlotFree (DropWhile (\x -> x /= Vazio) (DropWhile (\x -> x == Vazio) k)) ))
+maxSlotFree k = max( (length (takeWhile (\x -> x == Vazio)) k), (maxSlotFree (dropWhile (\x -> x /= Vazio) (dropWhile (\x -> x == Vazio) k)) ))
 
-fillDataCenter :: DataCenter -> [Servers] -> DataCenter
+fillDataCenter :: DataCenter -> [Server] -> DataCenter
 -- dado o data center, enche-o com os servidores (a lista de Servers está ordenada decrescentemente por racio)
 -- é preciso limitar o numero de elementos que se inserem na pool!! (isto é, só se pretende inserir um numero definido de servidores)
 fillDataCenter dc [] = dc
@@ -70,10 +69,14 @@ distribui pool dc x y xmax ymax | y > ymax = (dc,pool)
                                 | otherwise = distribui poolsAtualizada (insertPosDataCenter dc x y (atualizaPool servidorAtual poolMenorCapG)) (x+1) y xmax ymax 
                                          where 
                                            servidorAtual = ((dc !! x) !! y)
-                                           (poolsAtualizada, poolMenorCapG) = calculaPool pool x (capacidade servidorAtual)
+                                           (poolsAtualizada, poolMenorCapG) = calculaPool pool x (capacidadeServ servidorAtual)
 
-calculaPool :: [Pool] -> Int -> 
+--calculaPool :: [Pool] -> Int -> Int -> ([Pool], Int)
+--calculaPool pools row cap =
 
+capacidadeServ :: Server -> Int
+capacidadeServ (Serv _ cap _ _ _ _) = cap
+capacidadeServ a = 0
 
 atualizaPool :: Server -> Int -> Server                                  
 atualizaPool (Serv id capacity size x y _) pool = (Serv id capacity size x y pool) 
@@ -81,11 +84,11 @@ atualizaPool (Serv id capacity size x y _) pool = (Serv id capacity size x y poo
 printResposta :: DataCenter -> IO()
 printResposta dc = formatedPrint (sort (filter (\x -> x /= Ocupado && x /= Vazio) (concat dc))) 0 
 
-formatedPrint :: [Servers] -> Int -> IO()
+formatedPrint :: [Server] -> Int -> IO()
 formatedPrint [] _  = return
-formatedPrint a@((Serv id capacity size x y pool):t) index | id == index = do println(unwords([show x, show y, show pool]))
-                                                                            formatedPrint t (index+1)
-                                                           | otherwise = do println "x"
+formatedPrint a@((Serv id capacity size x y pool):t) index | id == index = do putStrLn(unwords([show x, show y, show pool]))
+                                                                              formatedPrint t (index+1)
+                                                           | otherwise = do putStrLn "x"
                                                                             formatedPrint a (index + 1)
 
 main = do primeiraLinha <- getLine
@@ -102,5 +105,20 @@ main = do primeiraLinha <- getLine
           printResposta fst(resposta)
           -- print capacidade_minima_garantida
 
+-- JM
+calculaPool :: [Pool] -> Int -> Int -> ([Pool], Int)
+calculaPool pools row cap = ( addPool pools poolNova row cap , poolNova)
+                                where
+                                   poolNova = minIndex (map (\x -> x!!row)) pools
 
+addPool :: [Pool] -> Int -> Int -> Int -> [Pool]
+addPool pools poolAtualizar row cap = (take poolAtualizar pools ) ++ [novaPool] ++ (drop (poolAtualizar+1) pools )
+                                       where 
+                                         novaPool = (take row (pools!!poolAtualizar)) ++ [addCap cap ((pools!!poolAtualizar)!!row)] ++ (drop row (pools!!poolAtualizar)) 
 
+addCap :: Int -> Server -> Server
+addCap x (Serv a cap b c d e) = (Serv a (cap+x) b c d e) 
+addCap _ a = a
+
+minIndex :: Ord a => [a] -> Int
+minIndex list = snd . minimum $ zip list [0 .. ]
