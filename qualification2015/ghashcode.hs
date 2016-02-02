@@ -66,9 +66,14 @@ distribui :: [Pool] -> DataCenter -> Int-> Int -> Int-> Int -> (DataCenter, [Poo
 -- pool, dc, coordenadas a consultar agora, coordenadas maximas
 distribui pool dc x y xmax ymax | y > ymax = (dc,pool)
                                 | x > xmax = distribui pool dc 0 (y+1) xmax ymax
-                                | ((dc !! x) !! y) == Ocupado || ((pool !! x) !! y) == Vazio = distribui pool dc (x+1) y xmax ymax 
-                                | otherwise = distribui poolsAtualizada (insertPosDataCenter dc x y (atualizaPool ((dc !! x) !! y) poolMenorCapG)) (x+1) y xmax ymax 
-                                         where (poolsAtualizada, poolMenorCapG) = calculaPool x (capacidade ((dc !! x) !! y))
+                                | servidorAtual == Ocupado || servidorAtual == Vazio = distribui pool dc (x+1) y xmax ymax 
+                                | otherwise = distribui poolsAtualizada (insertPosDataCenter dc x y (atualizaPool servidorAtual poolMenorCapG)) (x+1) y xmax ymax 
+                                         where 
+                                           servidorAtual = ((dc !! x) !! y)
+                                           (poolsAtualizada, poolMenorCapG) = calculaPool pool x (capacidade servidorAtual)
+
+calculaPool :: [Pool] -> Int -> 
+
 
 atualizaPool :: Server -> Int -> Server                                  
 atualizaPool (Serv id capacity size x y _) pool = (Serv id capacity size x y pool) 
