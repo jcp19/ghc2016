@@ -14,7 +14,7 @@ newDataCenter x y = replicate x (replicate y Vazio)
 
 -- insere na posição escolhida do DC, nao verifica se é possivel inserir na posiçao escolhida, isso deve ser verificado antes
 insertPosDataCenter :: DataCenter -> Int -> Int -> Server -> DataCenter
-insertPosDataCenter dc x y a@(Serv id cap size _ _ _) = (take x dc) ++ [take y (dc!!x) ++ [(Serv id cap size x y (-1))] ++ (replicate (size-1) Ocupado) ++ drop (y+size) (dc!!x)] ++ (drop (x+1) dc)
+insertPosDataCenter dc x y a@(Serv id cap size _ _ pool) = (take x dc) ++ [take y (dc!!x) ++ [(Serv id cap size x y pool)] ++ (replicate (size-1) Ocupado) ++ drop (y+size) (dc!!x)] ++ (drop (x+1) dc)
 insertPosDataCenter dc x y a = (take x dc) ++ [take y (dc!!x) ++ [a] ++ drop (y+1) (dc!!x)] ++ (drop (x+1) dc)
 
 insereOcupados :: Int -> DataCenter -> IO DataCenter
@@ -57,7 +57,7 @@ fillDataCenter :: DataCenter -> [Server] -> DataCenter
 -- é preciso limitar o numero de elementos que se inserem na pool!! (isto é, só se pretende inserir um numero definido de servidores)
 fillDataCenter dc [] = dc
 fillDataCenter dc (h:t) | linha_menorCap_ondeCabe dc h == -1 = fillDataCenter dc t
-                        | otherwise = insertPosDataCenter dc (linha_menorCap_ondeCabe dc h) (melhor_pos (dc!!(linha_menorCap_ondeCabe dc h)) h) h
+                        | otherwise = fillDataCenter (insertPosDataCenter dc (linha_menorCap_ondeCabe dc h) (melhor_pos (dc!!(linha_menorCap_ondeCabe dc h)) h) h) t
 
 createPools :: Int -> Int -> [Pool]
 createPools npools nrows = replicate npools (replicate nrows 0)
@@ -98,12 +98,15 @@ main = do primeiraLinha <- getLine
           dc <- insereOcupados (vars!!2) dc
           servers <- getContents
           servers <- return (sortRatios(leServers 0 (lines servers)))
+          
           dc <- return (fillDataCenter dc servers)
+          --print dc
           pools <- return (createPools (vars!!3) (vars!!0))
           -- a distribui vai dar um tuplo "resposta" com (pools, servers)
           resposta <- return (distribui pools dc 0 0 ((vars!!0) -1) ((vars!!1) -1)) 
+          print (snd resposta)
           --a lista final de servidores vai ter a localização dos servidores nas pools
-          printResposta (fst(resposta))
+          --printResposta (fst(resposta))
           -- print capacidade_minima_garantida
 
 
