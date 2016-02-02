@@ -1,10 +1,12 @@
-import Data.List
-
 module Main where
+
+import Data.List
 
 data Server = Vazio | Ocupado | Serv Int Int Int Int Int Int deriving (Show, Read, Eq)
 -- id capacity size x y pool
 type DataCenter = [[Server]]
+type Pool = [Int]
+--em cada indice indica que capacidade da pool está na row com esse indice
 
 newDataCenter :: Int -> Int -> DataCenter
 newDataCenter x y = replicate x (replicate y Vazio)
@@ -26,17 +28,25 @@ insereOcupados x dc = do pos <- getLine
 leServers :: Int -> [String] -> [Server]
 leServers _ [] = []
 leServers x (h:t) = (Serv x (vars!!1) (vars!!0) (-1) (-1) (-1)) : (leServers (x+1) t)
-	               where
-	               	 vars = (map read (words h)) :: [Int]
+                   where
+                        vars = (map read (words h)) :: [Int]
 
 indexer :: [a] -> [(a,Int)]
 indexer x = indexerAux x 0
               where indexerAux [] _ = []
                     indexerAux (h:t) x = ((h,x):(indexerAux t (x+1)))
 
+capacity :: [Servers] -> Int
+capacity [] = 0
+capacity ((Serv _ _ size _ _ _):t) = size + (capacity t)
+capacity (x:xs) = capacity xs
+
+
 linha_menorCap_ondeCabe :: DataCenter -> Server -> Int
--- falta ordenar por capacidade
-linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) =  head (sort (filter (\(x,y) -> maxSlotFree x >= size) (indexer dc)))
+linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) =  snd (head (sort (map (\((x,y) -> (capacity x, y))) (filter (\(x,y) -> maxSlotFree x >= size) (indexer dc)))))
+
+melhor_pos :: [Server] -> Server -> Int
+melhor_pos x s = 
 
 maxSlotFree :: [Servers] -> Int
 maxSlotFree [] = 0
@@ -44,9 +54,25 @@ maxSlotFree k = max( (length (takeWhile (\x -> x == Vazio)) k), (maxSlotFree (Dr
 
 fillDataCenter :: DataCenter -> [Servers] -> DataCenter
 -- dado o data center, enche-o com os servidores (a lista de Servers está ordenada decrescentemente por racio)
+-- é preciso limitar o numero de elementos que se inserem na pool!! (isto é, só se pretende inserir um numero definido de servidores)
 fillDataCenter dc [] = dc
 fillDataCenter dc (h:t) | linha_menorCap_ondeCabe dc h == -1 = fillDataCenter dc t
-                        | otherwise = insertPosDataCenter dc (linha_menorCap_ondeCabe dc h) (melhor_pos dc (linha_menorCap_ondeCabe dc h) h) h
+                        | otherwise = insertPosDataCenter dc (linha_menorCap_ondeCabe dc h) (melhor_pos (dc!!(linha_menorCap_ondeCabe dc h)) h) h
+
+createPools :: Int -> Int -> [Pool]
+createPools npools nrows = replicate npools (replicate nrows 0)
+
+distribui :: [Pool] -> DataCenter -> (DataCenter, [Pool])
+
+printResposta :: DataCenter -> IO()
+printResposta dc = formatedPrint (sort (filter (\x -> x /= Ocupado && x /= Vazio) (concat dc))) 0 
+
+formatedPrint :: [Servers] -> Int -> IO()
+formatedPrint [] _  = return
+formatedPrint a@((Serv id capacity size x y pool):t) index | id == index = do println(unwords([show x, show y, show pool]))
+                                                                            formatedPrint t (index+1)
+                                                           | otherwise = do println "x"
+                                                                            formatedPrint a (index + 1)
 
 
 main = do primeiraLinha <- getLine
@@ -54,8 +80,14 @@ main = do primeiraLinha <- getLine
           dc <- return (newDataCenter (vars!!0) (vars!!1))
           dc <- insereOcupados (vars!!2) dc
           servers <- getContents
-          servers <- return (leServers 0 (lines servers))
-          print servers
+          servers <- return sortRatios(leServers 0 (lines servers))
+          dc <- return (fillDataCenter dc servers)
+          pools <- return (createPools (vars!!3) (vars!!0))
+          -- a distribui vai dar um tuplo "resposta" com (pools, servers)
+          resposta <- return (distribui pools dc)
+          --a lista final de servidores vai ter a localização dos servidores nas pools
+          printResposta fst(resposta)
+          -- print capacidade_minima_garantida
 
 
 
