@@ -62,7 +62,14 @@ fillDataCenter dc (h:t) | linha_menorCap_ondeCabe dc h == -1 = fillDataCenter dc
 createPools :: Int -> Int -> [Pool]
 createPools npools nrows = replicate npools (replicate nrows 0)
 
-distribui :: [Pool] -> DataCenter -> (DataCenter, [Pool])
+distribui :: [Pool] -> DataCenter -> Int-> Int -> Int-> Int -> (DataCenter, [Pool])
+-- pool, dc, coordenadas a consultar agora, coordenadas maximas
+distribui pool dc x y xmax ymax | y > ymax = (dc,pool)
+                                | x > xmax = distribui pool dc 0 (y+1) xmax ymax
+                                | ((pool !! x) !! y) == Ocupado || ((pool !! x) !! y) == Vazio = distribui pool dc (x+1) y xmax ymax 
+                                | otherwise = 
+                                     where
+                                       (ondeInseriu, poolAlterada) = inserePoolmenoCapMin pool x
 
 printResposta :: DataCenter -> IO()
 printResposta dc = formatedPrint (sort (filter (\x -> x /= Ocupado && x /= Vazio) (concat dc))) 0 
@@ -73,7 +80,6 @@ formatedPrint a@((Serv id capacity size x y pool):t) index | id == index = do pr
                                                                             formatedPrint t (index+1)
                                                            | otherwise = do println "x"
                                                                             formatedPrint a (index + 1)
-
 
 main = do primeiraLinha <- getLine
           vars <- return ((map (read) (words primeiraLinha)) :: [Int])
