@@ -43,14 +43,14 @@ capacity (x:xs) = capacity xs
 
 
 linha_menorCap_ondeCabe :: DataCenter -> Server -> Int
-linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) =  snd (head (sort (map (\((x,y) -> (capacity x, y))) (filter (\(x,y) -> maxSlotFree x >= size) (indexer dc)))))
-
-melhor_pos :: [Server] -> Server -> Int
-melhor_pos x s = 
+linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) | length linhas_candidatas /= 0 =  snd (head linhas_candidatas)
+                                                 | otherwise = -1
+                                                    where
+                                                      linhas_candidatas = sort (map (\((x,y) -> (capacity x, y))) (filter (\(x,y) -> maxSlotFree x >= size) (indexer dc)))
 
 maxSlotFree :: [Servers] -> Int
 maxSlotFree [] = 0
-maxSlotFree k = max( (length (takeWhile (\x -> x == Vazio)) k), (maxSlotFree (DropWhile (\x -> x /= Vazio) (DropWhile (\x -> x == Vazio) ) k)) )
+maxSlotFree k = max( (length (takeWhile (\x -> x == Vazio)) k), (maxSlotFree (DropWhile (\x -> x /= Vazio) (DropWhile (\x -> x == Vazio) k)) ))
 
 fillDataCenter :: DataCenter -> [Servers] -> DataCenter
 -- dado o data center, enche-o com os servidores (a lista de Servers está ordenada decrescentemente por racio)
@@ -66,10 +66,12 @@ distribui :: [Pool] -> DataCenter -> Int-> Int -> Int-> Int -> (DataCenter, [Poo
 -- pool, dc, coordenadas a consultar agora, coordenadas maximas
 distribui pool dc x y xmax ymax | y > ymax = (dc,pool)
                                 | x > xmax = distribui pool dc 0 (y+1) xmax ymax
-                                | ((pool !! x) !! y) == Ocupado || ((pool !! x) !! y) == Vazio = distribui pool dc (x+1) y xmax ymax 
-                                | otherwise = 
-                                     where
-                                       (ondeInseriu, poolAlterada) = inserePoolmenoCapMin pool x
+                                | ((dc !! x) !! y) == Ocupado || ((pool !! x) !! y) == Vazio = distribui pool dc (x+1) y xmax ymax 
+                                | otherwise = distribui poolsAtualizada (insertPosDataCenter dc x y (atualizaPool ((dc !! x) !! y) poolMenorCapG)) (x+1) y xmax ymax 
+                                         where (poolsAtualizada, poolMenorCapG) = calculaPool x (capacidade ((dc !! x) !! y))
+
+atualizaPool :: Server -> Int -> Server                                  
+atualizaPool (Serv id capacity size x y _) pool = (Serv id capacity size x y pool) 
 
 printResposta :: DataCenter -> IO()
 printResposta dc = formatedPrint (sort (filter (\x -> x /= Ocupado && x /= Vazio) (concat dc))) 0 
