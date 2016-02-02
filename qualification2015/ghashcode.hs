@@ -1,8 +1,9 @@
 module Main where
 
 import Data.List
+import Data.Function
 
-data Server = Vazio | Ocupado | Serv Int Int Int Int Int Int deriving (Show, Read, Eq)
+data Server = Vazio | Ocupado | Serv Int Int Int Int Int Int deriving (Show, Read, Eq, Ord)
 -- id capacity size x y pool
 type DataCenter = [[Server]]
 type Pool = [Int]
@@ -49,7 +50,7 @@ linha_menorCap_ondeCabe dc (Serv _ _ size _ _ _) | (length linhas_candidatas) /=
 
 maxSlotFree :: [Server] -> Int
 maxSlotFree [] = 0
-maxSlotFree k = max( (length (takeWhile (\x -> x == Vazio)) k), (maxSlotFree (dropWhile (\x -> x /= Vazio) (dropWhile (\x -> x == Vazio) k)) ))
+maxSlotFree k = max (length (takeWhile (\x -> x == Vazio) k)) (maxSlotFree (dropWhile (\x -> x /= Vazio) (dropWhile (\x -> x == Vazio) k)) )
 
 fillDataCenter :: DataCenter -> [Server] -> DataCenter
 -- dado o data center, enche-o com os servidores (a lista de Servers está ordenada decrescentemente por racio)
@@ -85,7 +86,7 @@ printResposta :: DataCenter -> IO()
 printResposta dc = formatedPrint (sort (filter (\x -> x /= Ocupado && x /= Vazio) (concat dc))) 0 
 
 formatedPrint :: [Server] -> Int -> IO()
-formatedPrint [] _  = return
+formatedPrint [] _  = putStr ""
 formatedPrint a@((Serv id capacity size x y pool):t) index | id == index = do putStrLn(unwords([show x, show y, show pool]))
                                                                               formatedPrint t (index+1)
                                                            | otherwise = do putStrLn "x"
@@ -96,29 +97,61 @@ main = do primeiraLinha <- getLine
           dc <- return (newDataCenter (vars!!0) (vars!!1))
           dc <- insereOcupados (vars!!2) dc
           servers <- getContents
-          servers <- return sortRatios(leServers 0 (lines servers))
+          servers <- return (sortRatios(leServers 0 (lines servers)))
           dc <- return (fillDataCenter dc servers)
           pools <- return (createPools (vars!!3) (vars!!0))
           -- a distribui vai dar um tuplo "resposta" com (pools, servers)
-          resposta <- return (distribui pools dc)
+          resposta <- return (distribui pools dc 0 0 ((vars!!0) -1) ((vars!!1) -1)) 
           --a lista final de servidores vai ter a localização dos servidores nas pools
-          printResposta fst(resposta)
+          printResposta (fst(resposta))
           -- print capacidade_minima_garantida
 
--- JM
+
 calculaPool :: [Pool] -> Int -> Int -> ([Pool], Int)
 calculaPool pools row cap = ( addPool pools poolNova row cap , poolNova)
                                 where
-                                   poolNova = minIndex (map (\x -> x!!row)) pools
+                                   poolNova = minIndex ((map (\x -> x!!row)) pools)
 
 addPool :: [Pool] -> Int -> Int -> Int -> [Pool]
 addPool pools poolAtualizar row cap = (take poolAtualizar pools ) ++ [novaPool] ++ (drop (poolAtualizar+1) pools )
                                        where 
-                                         novaPool = (take row (pools!!poolAtualizar)) ++ [addCap cap ((pools!!poolAtualizar)!!row)] ++ (drop row (pools!!poolAtualizar)) 
+                                         novaPool = (take row (pools!!poolAtualizar)) ++ [cap + ((pools!!poolAtualizar)!!row)] ++ (drop row (pools!!poolAtualizar)) 
 
-addCap :: Int -> Server -> Server
-addCap x (Serv a cap b c d e) = (Serv a (cap+x) b c d e) 
-addCap _ a = a
 
 minIndex :: Ord a => [a] -> Int
 minIndex list = snd . minimum $ zip list [0 .. ]
+
+-- JM
+
+
+ratio :: Server -> Float
+ratio Vazio = error "Invalid argument"
+ratio Ocupado = error "Invalid argument"
+ratio (Serv _ cap size _ _ _) = (fromIntegral cap) / (fromIntegral size)
+
+sortByDescending :: (a -> a -> Ordering) -> ([a] -> [a])
+sortByDescending cmp = sortBy (flip cmp)
+
+sortRatios :: [Server] -> [Server]
+sortRatios servers = sortByDescending (compare `on` ratio) servers
+
+rowCapacity :: [Server] -> Int
+rowCapacity [] = 0
+rowCapacity ((Serv _ cap _ _ _ _):t) = cap + rowCapacity t
+rowCapacity (h:t) = rowCapacity t
+
+sortCapacities :: DataCenter -> DataCenter
+sortCapacities dc = sortByDescending (compare `on` rowCapacity) dc
+
+melhor_pos :: [Server] -> Server -> Int
+melhor_pos [] _ = error "Empty list"
+melhor_pos l serv = snd (minimumBy (compare `on` fst) (possibleSlots l serv 0))
+
+-- returns [(number free consecutive slots, start of segment)]
+possibleSlots :: [Server] -> Server -> Int -> [(Int,Int)] 
+possibleSlots [] _ _ = []
+possibleSlots l s@(Serv _ _ size _ _ _) start | nFree >= size         = (nFree,start):(possibleSlots remaining s start')
+                                              | otherwise             = possibleSlots remaining s start'
+    where nFree = length (takeWhile (==Vazio) l)
+          (occupied, remaining) = span (/= Vazio) (drop nFree l)
+          start' = nFree + (length occupied)
