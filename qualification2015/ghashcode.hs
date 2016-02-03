@@ -98,23 +98,23 @@ main = do primeiraLinha <- getLine
           dc <- insereOcupados (vars!!2) dc
           servers <- getContents
           servers <- return (sortRatios(leServers 0 (lines servers)))
-          
           dc <- return (fillDataCenter dc servers)
           --print dc
           pools <- return (createPools (vars!!3) (vars!!0))
           -- a distribui vai dar um tuplo "resposta" com (pools, servers)
           resposta <- return (distribui pools dc 0 0 ((vars!!0) -1) ((vars!!1) -1)) 
-          print (snd (resposta))
+          print (minCapMinG(snd (resposta)))
           --a lista final de servidores vai ter a localização dos servidores nas pools
-          --  printResposta (fst(resposta))
+          --printResposta (snd(resposta))
           -- print capacidade_minima_garantida
 
 
 --poolNova = minIndex ((map (\x -> x!!row)) pools)
 calculaPool :: [Pool] -> Int -> Int -> ([Pool], Int)
 calculaPool pools row cap = ( addPool pools poolNova row cap , poolNova)
-                                where
-                                   poolNova = minIndex ((map (\x -> capMinG x) pools)
+                                  where
+                                     poolNova = minIndex ((map (\x -> capMinG x) pools))
+
 
 capMinG :: Pool -> Int
 capMinG x = (sum x) - (maximum x)
@@ -127,6 +127,9 @@ addPool pools poolAtualizar row cap = (take poolAtualizar pools ) ++ [novaPool] 
 
 minIndex :: Ord a => [a] -> Int
 minIndex list = snd . minimum $ zip list [0 .. ]
+
+minCapMinG :: [Pool] -> Int
+minCapMinG x = minimum (map (\x -> capMinG x) x)
 
 -- JM
 
