@@ -110,15 +110,19 @@ main = do primeiraLinha <- getLine
           -- print capacidade_minima_garantida
 
 
+--poolNova = minIndex ((map (\x -> x!!row)) pools)
 calculaPool :: [Pool] -> Int -> Int -> ([Pool], Int)
 calculaPool pools row cap = ( addPool pools poolNova row cap , poolNova)
                                 where
-                                   poolNova = minIndex ((map (\x -> x!!row)) pools)
+                                   poolNova = minIndex ((map (\x -> capMinG x) pools)
+
+capMinG :: Pool -> Int
+capMinG x = (sum x) - (maximum x)
 
 addPool :: [Pool] -> Int -> Int -> Int -> [Pool]
 addPool pools poolAtualizar row cap = (take poolAtualizar pools ) ++ [novaPool] ++ (drop (poolAtualizar+1) pools )
                                        where 
-                                         novaPool = (take row (pools!!poolAtualizar)) ++ [cap + ((pools!!poolAtualizar)!!row)] ++ (drop (row+1) (pools!!poolAtualizar)) 
+                                          novaPool = (take row (pools!!poolAtualizar)) ++ [cap + ((pools!!poolAtualizar)!!row)] ++ (drop (row+1) (pools!!poolAtualizar)) 
 
 
 minIndex :: Ord a => [a] -> Int
