@@ -7,7 +7,7 @@ type Position = (Int,Int)
 {- Arguments: canvas -> (row, column, s)
    Returns: canvas with '#' in positions [(x,y) | x <- [row-s..row+s], y <- [column-s..column+s]] 
 
-   Paint all are inside a square of (2*s + 1) x (2*s + 1) dimensions centered at (row,column) 
+   Paint all cells inside a square of (2*s + 1) x (2*s + 1) dimensions centered at (row,column) 
 -}
 
 paintSquare :: Canvas -> (Int,Int,Int) -> Canvas
