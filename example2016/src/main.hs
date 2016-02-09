@@ -4,6 +4,7 @@ import Data.List
 import Data.Function
 
 type Canvas = [[Char]]
+type Position = ((Int, Int), (Int, Int))
 
 newCanvas :: Int -> Int -> Canvas
 newCanvas x y = replicate x (replicate y '.')
@@ -17,6 +18,11 @@ eraseCell canvas x y = insertPosCanvas canvas x y '.'
 readCanvas :: IO Canvas
 readCanvas = do board <- getContents
                 return$lines board
+
+bestColumn :: Canvas -> (Position, Position)
+-- computes the best column in which we can paint a line, the output is in the same format as the input for the PAINT_LINE
+bestColumn = invert$transpose$bestLine
+                where invert = \((a,b), (c,d)) -> ((b,a), (d,c)) 
 
 main = do dims <- getLine
           dims <- return ((map (read) (words dims)) :: [Int])
