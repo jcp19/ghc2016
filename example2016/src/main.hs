@@ -4,7 +4,7 @@ import Data.List
 import Data.Function
 
 type Canvas = [[Char]]
-type Position = ((Int, Int), (Int, Int))
+type Position = (Int, Int)
 
 newCanvas :: Int -> Int -> Canvas
 newCanvas x y = replicate x (replicate y '.')
@@ -21,7 +21,7 @@ readCanvas = do board <- getContents
 
 bestColumn :: Canvas -> (Position, Position)
 -- computes the best column in which we can paint a line, the output is in the same format as the input for the PAINT_LINE
-bestColumn = invert$transpose$bestLine
+bestColumn a = invert (bestRow$transpose a) 
                 where invert = \((a,b), (c,d)) -> ((b,a), (d,c)) 
 
 paintLine :: Canvas -> (Position, Position) -> Canvas
@@ -36,4 +36,3 @@ main = do dims <- getLine
           canvas <- readCanvas
           print canvas
           
-
