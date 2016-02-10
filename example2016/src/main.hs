@@ -45,15 +45,16 @@ paintItAux canvas empty hist | canvas == empty = ([], hist)
                                     helpX = (\((a,b), (c,d)) -> d - b)
                                     newRec ((a,b),(c,d)) = ["PAINT_LINE " ++ show a++ " " ++ show b ++ " " ++ show c ++ " " ++ show d]
 
-paintIt :: Canvas -> String
+paintIt :: Canvas -> [String]
 paintIt canvas | length canvas == 0 = []
-               | otherwise = unlines$snd(paintItAux canvas (emptyCanvas (length canvas) (length (head canvas))) []) 
+               | otherwise = snd(paintItAux canvas (emptyCanvas (length canvas) (length (head canvas))) []) 
 
 main = do dims <- getLine
           dims <- return ((map (read) (words dims)) :: [Int])
           (rows, columns) <- return (dims!!0, dims!!1)
           canvas <- readCanvas
-          putStrLn (paintIt canvas)
+          putStrLn$show$length (paintIt canvas)
+          putStrLn (unlines$paintIt canvas)
           
 --JM
 
@@ -70,3 +71,5 @@ potentialRowSegs l@(h:t) (x,y) | hashtags == []     = potentialRowSegs t (x+1, 0
           (hashtags, rest') = span (=='#') rest
           yStart = y + length dots
           yEnd = yStart + length hashtags - 1
+
+
