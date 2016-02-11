@@ -2,7 +2,7 @@ data State = Waiting Load | Loading Load | Delivery Position Load
 
 type Order = (ID, Position, Load)
 type Wherehouse = (ID, Position, Load, [Drone])
-type Drone = (ID, Position, State) Load
+type Drone = (ID, Position, State)
 
 type ID = Int
 type Product = Int
